@@ -13,7 +13,7 @@
  * value at each interrupt
  * 
  * Author:
- *  Rajeev Verma (RV4560@rit.edu)
+ *  Rajeev Verma(RV4560@rit.edu)
  *  Howard
  *
  *****************************************************************************/
@@ -159,10 +159,10 @@ void getUserInput(void)
    
    // Read the digits into a buffer until you get a carage return.
    // Fetch and echo the user input
-      printf("\r\nWhat you want me to do for first Servo: ");
+      printf("\n\rCommand for first Servo: ");
       buffer[bufferIndex] = GetChar();
       bufferIndex++;
-      printf("\r\nWhat you want me to do for second Servo: ");
+      printf("\n\rCommand for second Servo: ");
       buffer[bufferIndex] = GetChar();
       
       
@@ -654,7 +654,7 @@ void processUserCommand(void)
 {
    // process command
    
-   // process the continue command.
+     // process the continue command.
    if((servo1UserInput == 0x63 || servo1UserInput == 0x43) &&
        servoA.status != error && (firstThree(*servoA.currentCommand)) != RECIPE_END) 
    {
@@ -675,6 +675,7 @@ void processUserCommand(void)
    if((servo1UserInput == 0x50 || servo1UserInput == 0x70) &&
        servoA.status != error  && (firstThree(*servoA.currentCommand)) != RECIPE_END) 
    {
+      printf("\r\nYou have following oprions: \n\r l = Move left \n\r r = Move Right\n\r s = Switch Reciepe\n\r c = Continue reciepe\n\r n = no-op\n\r b = Restart reciepe");
       servoA.status  = paused;
       PORTA = PORTA | 0x10;
       //printf("\r\n processUserCommand: servoA.status = paused\r\n");
@@ -759,6 +760,20 @@ void processUserCommand(void)
       }
       servoB.status = donothing;
    }
+   
+     // Process the swap Command which change the reciepe for the servos.
+   if((servo1UserInput == 0x53 || servo1UserInput == 0x73) &&
+       servoA.status != error ) 
+   {
+      servoA.currentCommand = servoB.currentCommand;
+   }
+   
+    if((servo2UserInput == 0x53 || servo2UserInput == 0x73) && 
+      servoB.status != error ) 
+   {
+      servoB.currentCommand = servoA.currentCommand;
+   }
+   
    // set global variables to 0 so we know we have new input
    servo1UserInput = 0;
    servo2UserInput = 0;
