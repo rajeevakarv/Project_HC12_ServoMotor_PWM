@@ -187,6 +187,10 @@ void initializeCommands(void)
     myCommand3 = LOOP_START;
     myCommand4 = END_LOOP; 
     
+    *(servoA.currentCommand) = myCommand+5;  
+    servoA.currentCommand++;
+    *(servoA.currentCommand) = myCommand+0;  
+    servoA.currentCommand++;
     *(servoA.currentCommand) = myCommand+2;  // Test-3
     servoA.currentCommand++;
     *(servoA.currentCommand) = myCommand;    // Test-3
@@ -229,6 +233,16 @@ void initializeCommands(void)
     // set the pointer back to the beginning of the buffer.
     servoA.currentCommand = &bufferServoA;  
 
+    *(servoB.currentCommand) = myCommand+5;  
+    servoB.currentCommand++;
+    *(servoB.currentCommand) = myCommand+0;  
+    servoB.currentCommand++;
+    *(servoB.currentCommand) = myCommand+4;  
+    servoB.currentCommand++;
+    *(servoB.currentCommand) = myCommand+0;  
+    servoB.currentCommand++;
+    *(servoB.currentCommand) = myCommand+5;  
+    servoB.currentCommand++;
     *(servoB.currentCommand) = myCommand;     //Test1
     servoB.currentCommand++;                  
     *(servoB.currentCommand) = myCommand+5;   //Test1
@@ -258,6 +272,28 @@ void initializeCommands(void)
     *(servoB.currentCommand) = myCommand+5;
     servoB.currentCommand++;
     *(servoB.currentCommand) = myCommand;
+    servoB.currentCommand++;
+    *(servoB.currentCommand) = myCommand+3;      //Test-5
+    servoB.currentCommand++;
+    *(servoB.currentCommand) = myCommand3+2;     //Test-5
+    servoB.currentCommand++;
+    *(servoB.currentCommand) = myCommand+1;      //Test-5
+    servoB.currentCommand++;
+    *(servoB.currentCommand) = myCommand+4;      //Test-5
+    servoB.currentCommand++;
+    *(servoB.currentCommand) = myCommand3+1;     //Test-5
+    servoB.currentCommand++;
+    *(servoB.currentCommand) = myCommand+1;      //Test-5
+    servoB.currentCommand++;
+    *(servoB.currentCommand) = myCommand+5;      //Test-5
+    servoB.currentCommand++;
+    *(servoB.currentCommand) = myCommand4;      //Test-5
+    servoB.currentCommand++;
+    *(servoB.currentCommand) = myCommand+0;      //Test-5
+    servoB.currentCommand++;
+    *(servoB.currentCommand) = myCommand4;      //Test-5
+    servoB.currentCommand++;
+    *(servoB.currentCommand) = myCommand;        //Test-5
     servoB.currentCommand++;
     *(servoB.currentCommand) = myCommand+5;
     servoB.currentCommand++;
@@ -522,13 +558,19 @@ void processCommand (struct TaskControlBlock* servo, enum COMMANDS command, UINT
          } 
          else 
          {
-            // we have a nested loop error.
-            printf("\r\nprocessCommand: Nested Loop Error.\r\n");
-            
+        
             // place the task in an error state.  In this case suspended.
             servo->status = error;
             
-            // Rajeev we need LED status lights here.
+            if(servo == &servoA)
+            {
+              printf("\r\nprocessCommand: Nested Loop Error for servoA\r\n");
+              PORTA = PORTA | 0x40;        // Reciepy command error.
+            } else if(servo == &servoB){
+              printf("\r\nprocessCommand: Nested Loop Error for servoB\r\n");
+              PORTA = PORTA | 0x04;        // Reciepy command error.
+      
+            } 
          }
          
          break;
@@ -619,24 +661,22 @@ void processUserCommand(void)
    }
    
        // process the restart command.
-   if((servo1UserInput == 0x42 || servo1UserInput == 0x62) &&
-       servoA.status != error ) 
+   if((servo1UserInput == 0x42 || servo1UserInput == 0x62)) 
    {
       servoA.currentCommand = &bufferServoA;
       servoA.status  = ready;
       PORTA = PORTA & 0x0F;
       reciepeEndServoA = 0;
-      printf("\r\n processUserCommand: B is pressed for ServoA.\r\n");
+      //printf("\r\n processUserCommand: B is pressed for ServoA.\r\n");
    }
    
-    if((servo2UserInput == 0x42 || servo2UserInput == 0x62) && 
-      servoB.status != error ) 
+    if((servo2UserInput == 0x42 || servo2UserInput == 0x62)) 
    {
       servoB.currentCommand = &bufferServoB;
       servoB.status = ready;
       PORTA = PORTA & 0xF0;
       reciepeEndServoB = 0;
-      printf("\r\n processUserCommand: B is pressed for ServoB\r\n");
+      //printf("\r\n processUserCommand: B is pressed for ServoB\r\n");
    }
    
         // process the no-op command.
@@ -644,14 +684,14 @@ void processUserCommand(void)
        servoA.status != error ) 
    {
       servoA.status  = donothing;
-      printf("\r\n processUserCommand: B is pressed for ServoA.\r\n");
+      //printf("\r\n processUserCommand: B is pressed for ServoA.\r\n");
    }
    
     if((servo2UserInput == 0x4E || servo2UserInput == 0x6E) && 
       servoB.status != error ) 
    {
       servoB.status = donothing;
-      printf("\r\n processUserCommand: B is pressed for ServoB\r\n");
+      //printf("\r\n processUserCommand: B is pressed for ServoB\r\n");
    }
    
    // process the run Right command.
