@@ -13,9 +13,8 @@
  * value at each interrupt
  * 
  * Author:
- *  Jon Szymaniak (08/14/2009)
- *  Tom Bullinger (09/07/2011)	Added terminal framework
- * Chnages made by Rajeev Verma and Howard.
+ *  Rajeev Verma (RV4560@rit.edu)
+ *  Howard
  *
  *****************************************************************************/
 
@@ -100,7 +99,7 @@ enum COMMANDS
   TBD1,
   LOOP_START = 128,
   END_LOOP = 160,
-  TBD2,
+  BREAK_LOOP = 96,
   TBD3
 };
 
@@ -181,12 +180,13 @@ void getUserInput(void)
 void initializeCommands(void)
 {
 
-    enum COMMANDS myCommand, myCommand2, myCommand3, myCommand4;
+    enum COMMANDS myCommand, myCommand2, myCommand3, myCommand4, myCommand5;
 
     myCommand = MOV;
     myCommand2 = WAIT;
     myCommand3 = LOOP_START;
     myCommand4 = END_LOOP; 
+    myCommand5 = BREAK_LOOP;
     
     *(servoA.currentCommand) = myCommand+5;  
     servoA.currentCommand++;
@@ -226,7 +226,25 @@ void initializeCommands(void)
     servoA.currentCommand++;
     *(servoA.currentCommand) = myCommand+5;
     servoA.currentCommand++;
-    *(servoA.currentCommand) = myCommand;
+    *(servoA.currentCommand) = myCommand+3;      //Test-6
+    servoA.currentCommand++;
+    *(servoA.currentCommand) = myCommand3+2;     //Test-6
+    servoA.currentCommand++;
+    *(servoA.currentCommand) = myCommand+1;      //Test-6
+    servoA.currentCommand++;
+    *(servoA.currentCommand) = myCommand5;      //Test-6
+    servoA.currentCommand++;
+    *(servoA.currentCommand) = myCommand+4;      //Test-6
+    servoA.currentCommand++;
+    *(servoA.currentCommand) = myCommand+0;      //Test-6
+    servoA.currentCommand++;
+     *(servoA.currentCommand) = myCommand4;      //Test-6
+    servoA.currentCommand++;
+    *(servoA.currentCommand) = myCommand+5;        //Test-6
+    servoA.currentCommand++;
+    *(servoA.currentCommand) = myCommand+2;
+    servoA.currentCommand++;
+    *(servoA.currentCommand) = myCommand+3;
     servoA.currentCommand++;
     *(servoA.currentCommand) = RECIPE_END;
   
@@ -419,7 +437,7 @@ void processCommand (struct TaskControlBlock* servo, enum COMMANDS command, UINT
   switch(command) 
   {
      case RECIPE_END:
-          //printf("\r\n processCommand: RECIPE_END\r\n");
+          printf("\r\n processCommand: RECIPE_END\r\n");
           // Turn off the servos
            if(servo == &servoA) 
               {
@@ -453,7 +471,7 @@ void processCommand (struct TaskControlBlock* servo, enum COMMANDS command, UINT
               } 
           break;
      case MOV:
-         //printf("\r\n processCommand: MOV %d\r\n", commandContext);
+         printf("\r\n processCommand: MOV %d\r\n", commandContext);
         // Check to make sure the command is valid.
         // The positions are 0-5
         if(commandContext < 6) 
@@ -605,7 +623,16 @@ void processCommand (struct TaskControlBlock* servo, enum COMMANDS command, UINT
         }
           
         break;
-     
+     case BREAK_LOOP :
+        printf("\r\n processCommand: BREAK_LOOP\r\n");
+        
+        //While loop will shift the pointer to the end of current loop. 
+        while(*servo->currentCommand != END_LOOP) {
+          servo->currentCommand++;
+        }
+        servo->currentCommand++; //finally we are pointing to next command in reciepe.
+        
+        break;  
      default:
         if(servo == &servoA)
         {
@@ -699,14 +726,18 @@ void processUserCommand(void)
    if((servo1UserInput == 0x52 || servo1UserInput == 0x72) &&
        servoA.status != error ) 
    {
-      processCommand(&servoA,MOV, ++servoA.currentServoPosition );
+      if(servoA.currentServoPosition != 0){
+        processCommand(&servoA,MOV, --servoA.currentServoPosition );
+      }
       servoA.status = donothing;      
    }
    
     if((servo2UserInput == 0x52 || servo2UserInput == 0x72) && 
       servoB.status != error ) 
    {
-      processCommand(&servoB,MOV, ++servoB.currentServoPosition);
+      if(servoB.currentServoPosition != 0){
+      processCommand(&servoB,MOV, --servoB.currentServoPosition);
+      }
       servoB.status = donothing;
    }
    
@@ -714,14 +745,18 @@ void processUserCommand(void)
    if((servo1UserInput == 0x4C || servo1UserInput == 0x6C) &&
        servoA.status != error ) 
    {
-      processCommand(&servoA,MOV, --servoA.currentServoPosition);
+      if(servoA.currentServoPosition != 5){
+          processCommand(&servoA,MOV, ++servoA.currentServoPosition);
+      }
       servoA.status = donothing;
    }
    
     if((servo2UserInput == 0x4C || servo2UserInput == 0x6C) && 
       servoB.status != error ) 
    {
-      processCommand(&servoB,MOV, --servoB.currentServoPosition);
+      if(servoB.currentServoPosition != 5){
+          processCommand(&servoB,MOV, ++servoB.currentServoPosition);
+      }
       servoB.status = donothing;
    }
    // set global variables to 0 so we know we have new input
